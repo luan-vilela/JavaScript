@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Loteria</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+
+        #layout{
+            text-align: center;
+            width: 800px;
+            margin: 3px auto;
+            border-radius: 25px;
+            padding: 12px;
+            background: yellowgreen;
+            box-shadow: 5px 5px 5px 2px rgba(70, 92, 25, 0.747);
+        }
+        .bola{
+            padding: 8px;
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            margin: 3px;
+            font-size: 26pt;
+            color:azure;
+            font-weight: 550;
+            border-radius: 25px;
+            box-shadow: 5px 5px 2px 1px rgba(12, 12, 12, 0.342);
+            background: rgba(0, 0, 255, 0.911);
+        }
+        #sorteados{
+            max-width: 580px;
+            width: 750px;
+            min-height: 50px;
+            max-height: 500px;
+            display: inline-block;
+            text-align: center;
+            padding-top: 10px;
+            margin: 20px auto 20px;
+            
+        }
+        #cartela{
+                width: 580px;
+                margin: 0px auto;
+        }
+        input[type="checkbox"]{
+            display: none;
+        }
+        label.numero{
+            display: inline-block;
+            margin: 2px;
+            width: 22px;
+            height: 22px;
+            padding: 15px;
+            font-weight: 500;
+            color:rgb(24, 14, 14);
+            background: rgb(255, 115, 0);
+            box-shadow: 1px 2px 1px 1px rgba(12, 12, 12, 0.342);
+            border: 1px solid black;
+        }
+        input[type="checkbox"]:checked+label{
+            background: rgba(238, 238, 151, 0.74);
+        }
+        #numeros{
+            margin-top: 5px;
+            display: inline-block;
+        }
+        #status{
+            width: 580px;
+            margin: 8px auto;
+            padding: 2px;
+        }
+        div#status button{
+            background: rgb(98, 98, 184);
+            color: rgb(236, 229, 229);
+            box-shadow: 2px 3px 2px 1px rgba(12, 12, 12, 0.342);
+            font-size: 16pt;
+            width: 200px;
+            padding: 12px;
+            display: block;
+            float: right;
+        }
+        #resultado{
+            margin: 80px auto;
+            padding: 25px;
+            width: 200px;
+            
+            text-shadow: 3px 3px 1px rgba(0, 0, 0, 0.178);
+            /* background: rgba(255, 255, 0, 0.432); */
+        }
+        input[type=number]{
+            width: 200px;
+            height: 30px;
+            font-weight: 800;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .opt{
+            display: inline-block;
+            padding: 5px;
+        }
+        #rodape{
+            text-align: center;
+            width: 800px;
+            max-height: 250px;
+            overflow-y: scroll;
+            margin: 10px auto;
+            border-radius: 25px;
+            padding: 12px;
+            background: rgba(153, 205, 50, 0.623);
+            box-shadow: 5px 5px 5px 2px rgba(70, 92, 25, 0.747);
+        }
+    </style>
+
+</head>
+<body>
+    <div id="layout">
+        <div class="opt">
+            <label for="numCartela">Quantidade de n° na cartela</label><br />
+            <input type="number" id="numCartela" name="numCartela">
+        </div>
+        <div class="opt">
+            <label for="minGanha">Mínimo para ganhar</label><br />
+            <input type="number" name="minGanha" id="minGanha">
+            
+        </div>
+        <div class="opt">
+            <label for="maxGanha">Máximo para ganhar</label><br />
+            <input type="number" name="maxGanha" id="maxGanha">      
+        </div>
+        <div class="opt">
+            <button onclick="iniciar()">Criar Jogo</button>
+        </div>
+        <!-- Marcar caso queira jogar várias vezes -->
+        <div class="opt">
+            <label for="surpresinha">Repetir N vezes</label><br />
+            <input type="number" name="surpresinha" id="surpresinha"  value="1" >
+        </div>
+        <div class="opt">
+            <label for="bingo">Repetir até fazer N pontos </label><br />
+            <input type="number" name="bingo" id="bingo">   
+        </div>
+
+        <div id="sorteados">
+
+            
+        </div>
+        <p style="text-align: center;">Selecione seus números.</p>
+        <div id="cartela">
+            <!--Cartela-->
+        </div>
+        
+        <div id="status">
+                <div id="numeros">
+                    Quantidade de números selecionados: 0
+                </div>
+                <button onclick="repetirN()">Jogar</button>
+        </div>
+        <div id="resultado">
+            
+        </div>
+        
+    </div>
+    <div id="rodape"></div>
+    <script>
+        // gera cartela
+        var cartela
+        var possibilidades 
+        var min 
+        var max 
+        //quantidade de números selecionados
+        var qtd = 0
+        // números selecionados
+        var vetor = []
+        // números sorteados
+        var sorteio = []
+        //surpresinha
+        var surpresa
+        // Quantidade de pontos mínimos
+        var pontosMin
+        //verifica se requisistos básicos passaram
+        var req = false
+
+        function repetirN(){
+            surpresa = Number.parseInt(window.document.getElementById('surpresinha').value)
+            pontosMin = Number.parseInt(window.document.getElementById('bingo').value)
+            let rodape = document.getElementById('rodape');
+            //Deleta histórico de jogos
+            deletaListaJogos()
+
+            // boleano inverso...
+            // se retornar true é que não tem número selecionado
+            // vai marcar o max na cartela
+            if(automatico()){
+                alert(`Você não marcou nem um número, vamos marcar ${max} números.`)
+                let qtdNum = max
+                while(qtdNum--){
+                    let bola
+                    do{
+                        bola = Math.floor(Math.random() * possibilidades)
+
+                    }while(vetor[bola])
+                   // vetor[bola] = true
+                    seleciona(bola)
+                    document.getElementById(`n${bola}`).checked = true
+                }
+                
+            }
+
+
+
+            if(surpresa < 1){
+                surpresa = 1
+                window.document.getElementById('surpresinha').value = 1
+            }
+            if(isNaN(pontosMin) || pontosMin < 0){
+                pontosMin = 0
+            }
+            else{
+                if(pontosMin > max){
+                  alert('Você colocou um número de pontos maior do que é sorteado, vamos corrigir isso para você.')
+                  pontosMin = max; 
+                  window.document.getElementById('bingo').value = max;
+                }
+                alert('Aguarde, isso pode demorar um pouco!')
+            }
+
+            let cont = 1
+            let matchPoints = true
+
+            while(matchPoints){
+                iniciarSorteio()
+                let pontosFeitos = verificaNumeros()
+                let span = document.createElement('li')
+                span.appendChild(document.createTextNode(`${cont}: ${sorteio.sort()} -> Pontos ${pontosFeitos}`))
+                rodape.appendChild(span)
+                cont++
+                
+                if(pontosMin > 0){
+                    if(pontosFeitos == pontosMin)
+                        matchPoints = false
+                }
+                else if(!--surpresa)
+                    matchPoints = false
+            }
+         
+        }
+        function automatico(){
+            
+            for(let i = 0; i < vetor.length; i++){
+                if(vetor[i])
+                    return !true
+            }   
+            return !false;
+        }
+        function compara(a, b){
+            return a - b;
+        }
+        function iniciarSorteio(){
+            // testa se jogo está dentro dos padrões
+            if(!req)
+                iniciar()
+
+            sorteio = []
+            deleteBolas()
+    
+            for(let i = 0; i < max; i++){
+                let bola
+                do{
+                    bola = Math.floor(Math.random() * possibilidades)
+
+                }while(sorteio.indexOf(bola) != -1)
+                sorteio.push(bola)
+
+                let bolas = document.getElementById("sorteados")
+                let span = document.createElement('span')
+                span.setAttribute('class', 'bola')
+                // bolas de 1 até tamamho + 1
+                let texto = ''
+                bola++;
+                if(bola < 10)
+                    texto = document.createTextNode("0"+bola)
+                else
+                    texto = document.createTextNode(bola)
+
+                span.appendChild(texto)
+                bolas.appendChild(span)
+
+            }
+
+            let bonus = document.getElementById('resultado')
+            let acertos = verificaNumeros()
+
+            if(acertos >= min)
+                bonus.innerHTML = `<h1> Parabéns, GANHOUUU!</h1> <h3>Acertou ${acertos} números</h3>`
+            else    
+                bonus.innerHTML = `<h1> :( PERDEU!</h1> <h3>Acertou ${acertos} números</h3>`
+
+
+        }
+
+        function iniciar(){
+            // gera cartela
+             cartela = window.document.getElementById('cartela')
+             possibilidades = Number.parseInt(window.document.getElementById('numCartela').value) //Possibilidades para jogar
+             min = Number.parseInt(window.document.getElementById('minGanha').value)
+             max = Number.parseInt(window.document.getElementById('maxGanha').value)
+            //quantidade de números selecionados
+             qtd = 0
+            // números selecionados
+             vetor = []
+            // números sorteados
+             sorteio = []
+
+            if(possibilidades < 3 || isNaN(possibilidades)){
+                possibilidades = 3
+                window.document.getElementById('numCartela').value = possibilidades
+            }
+            if(min > possibilidades || isNaN(min)){
+                min = 1
+                window.document.getElementById('minGanha').value = min
+            }
+            if(max > possibilidades || isNaN(max) || max < min){
+                max = min 
+                window.document.getElementById('maxGanha').value = max
+            }
+            req = true
+            //deletaTabuleiro
+            deletaTabuleiro()
+            //Cria tabuleiro
+            criaTabuleiro()
+
+            
+        }
+        //Função salva números selecionas 
+        // recebe um index e salva como true/false
+        function seleciona(numero){
+            deleteBolas()
+            vetor[numero] = !vetor[numero]
+
+            if(vetor[numero])
+                qtd++;
+            else
+                qtd--;
+            // escreve na tela a quantidade de números selecionados
+            document.getElementById("numeros").innerHTML = `Quantidade de números selecionados: ${qtd}`  
+        }
+
+
+
+        //Remove bolas sorteadas, caso exista 
+        function deleteBolas(){
+            let bolas = document.getElementById('sorteados')
+            // verifica se div sorteadas tem filhos
+            while(bolas.childElementCount)
+                bolas.removeChild(bolas.children[0])
+
+            
+        }
+        function deletaListaJogos(){
+            let rodape = document.getElementById('rodape');
+            while(rodape.childElementCount)
+                rodape.removeChild(rodape.children[0])
+        }
+        //Deleta tudo que está dentro da div cartela
+        function deletaTabuleiro(){
+            let bolas = document.getElementById('cartela')
+            while(bolas.childElementCount)
+                bolas.removeChild(bolas.children[0])
+        }
+
+        function criaTabuleiro(){
+            for(let i = 0; i < possibilidades; i++){
+                // assim que cria cartela seta dos os valores em false
+                vetor[i] = false
+                let numero = `<input type="checkbox" id="n${i}" name="n${i}" value="${i}" onclick=seleciona(${i})>`
+                if(i < 9)
+                    numero += `<label for="n${i}" class="numero"> 0${i+1} </label>`
+                else
+                    numero += `<label for="n${i}" class="numero"> ${i+1} </label>`
+
+                let span = document.createElement('span')
+
+                span.innerHTML = numero
+                cartela.appendChild(span)
+            }
+        }
+
+        function verificaNumeros(){
+            let checa = 0
+            
+            for(let i = 0; i < sorteio.length; i++)
+                if(vetor[sorteio[i]] == true)
+                    checa++;
+
+            return checa
+        
+        }
+    </script>
+    
+</body>
+</html>
