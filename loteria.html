@@ -3,7 +3,7 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Loteria</title>
+    <title>Lotéria</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <style>
 
@@ -100,16 +100,32 @@
             display: inline-block;
             padding: 5px;
         }
-        #rodape{
-            text-align: center;
+        #rodape, #resultadosRodape{
+            text-align: left;
             width: 800px;
             max-height: 250px;
-            overflow-y: scroll;
+            overflow-y: auto;
             margin: 10px auto;
             border-radius: 25px;
             padding: 12px;
             background: rgba(153, 205, 50, 0.623);
             box-shadow: 5px 5px 5px 2px rgba(70, 92, 25, 0.747);
+        }
+        tr.tituloTH th{
+            border-bottom: 2px solid black;
+        }
+        table caption{
+
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        table tr td{
+            margin-right: 7px;
+            width: 259px;
+        }
+        .matchPont{
+            background: rgb(255, 208, 0);
         }
     </style>
 
@@ -118,33 +134,31 @@
     <div id="layout">
         <div class="opt">
             <label for="numCartela">Quantidade de n° na cartela</label><br />
-            <input type="number" id="numCartela" name="numCartela">
+            <input type="number" id="numCartela" name="numCartela" title="Digite a quantidade de números que existe na cartela.">
         </div>
         <div class="opt">
             <label for="minGanha">Mínimo para ganhar</label><br />
-            <input type="number" name="minGanha" id="minGanha">
+            <input type="number" name="minGanha" id="minGanha" title="Entre com a quantidade mínima que precisa acertar para ganhar o prêmio mínimo.">
             
         </div>
         <div class="opt">
             <label for="maxGanha">Máximo para ganhar</label><br />
-            <input type="number" name="maxGanha" id="maxGanha">      
+            <input type="number" name="maxGanha" id="maxGanha" title="Entre com a quantidade máxima que precisa acertar para ganhar o prêmio máximo.">      
         </div>
         <div class="opt">
-            <button onclick="iniciar()">Criar Jogo</button>
+            <button onclick="iniciar()" title="Criar cartela e setar  parâmetros.">Criar Jogo</button>
         </div>
         <!-- Marcar caso queira jogar várias vezes -->
         <div class="opt">
             <label for="surpresinha">Repetir N vezes</label><br />
-            <input type="number" name="surpresinha" id="surpresinha"  value="1" >
+            <input type="number" name="surpresinha" id="surpresinha"  value="1" title="Caso queira que repita o jogo, entre com a quantidade." >
         </div>
         <div class="opt">
             <label for="bingo">Repetir até fazer N pontos </label><br />
-            <input type="number" name="bingo" id="bingo">   
+            <input type="number" name="bingo" id="bingo" title="Se quiser que o jogo pare somente após fazer a quantidade de pontos digita. Isso pode demorar e causar travamentos dependendo da probaprobabilidade.">   
         </div>
 
         <div id="sorteados">
-
-            
         </div>
         <p style="text-align: center;">Selecione seus números.</p>
         <div id="cartela">
@@ -158,11 +172,11 @@
                 <button onclick="repetirN()">Jogar</button>
         </div>
         <div id="resultado">
-            
         </div>
         
     </div>
     <div id="rodape"></div>
+    <div id="resultadosRodape"></div>
     <script>
         // gera cartela
         var cartela
@@ -183,22 +197,24 @@
         var req = false
 
         function repetirN(){
+            //iniciar()
             surpresa = Number.parseInt(window.document.getElementById('surpresinha').value)
             pontosMin = Number.parseInt(window.document.getElementById('bingo').value)
-            let rodape = document.getElementById('rodape');
+            
             //Deleta histórico de jogos
             deletaListaJogos()
 
             // boleano inverso...
             // se retornar true é que não tem número selecionado
             // vai marcar o max na cartela
-            if(automatico()){
+            let auto = automatico()
+            if(auto){
                 alert(`Você não marcou nem um número, vamos marcar ${max} números.`)
                 let qtdNum = max
                 while(qtdNum--){
                     let bola
                     do{
-                        bola = Math.floor(Math.random() * possibilidades)
+                        bola = Math.floor(Math.random() * possibilidades) 
 
                     }while(vetor[bola])
                    // vetor[bola] = true
@@ -207,9 +223,6 @@
                 }
                 
             }
-
-
-
             if(surpresa < 1){
                 surpresa = 1
                 window.document.getElementById('surpresinha').value = 1
@@ -225,18 +238,30 @@
                 }
                 alert('Aguarde, isso pode demorar um pouco!')
             }
-
+            let pontuacao = new Array(max+1).fill(0)
             let cont = 1
             let matchPoints = true
-
+            let rodape = document.getElementById('rodape');
+            rodape.appendChild(document.createElement('table'))
+            rodape = document.getElementsByTagName('table')[0]
+            rodape.innerHTML = '<caption>Lista de jogos sorteados</caption>'
+            let cabecalho = document.createElement('tr')
+            cabecalho.setAttribute('class', 'tituloTH')
+            cabecalho.innerHTML = `<th>Jogos Feitos</th><th>Números sorteados</th><th>Pontos marcados</th>`
+            rodape.appendChild(cabecalho)
             while(matchPoints){
                 iniciarSorteio()
                 let pontosFeitos = verificaNumeros()
-                let span = document.createElement('li')
-                span.appendChild(document.createTextNode(`${cont}: ${sorteio.sort()} -> Pontos ${pontosFeitos}`))
+                let span = document.createElement('tr')
+                if(pontosFeitos >= min){
+                    span.setAttribute('class', 'matchPont')
+                }
+                let sorteados  = corrigiSorteio()
+                span.innerHTML =`<td>${cont}</td><td>${sorteados.sort(compara)}</td><td>${pontosFeitos} pontos</td>`
+                //span.appendChild(document.createDocumentFragment())
                 rodape.appendChild(span)
                 cont++
-                
+                pontuacao[pontosFeitos] += 1 
                 if(pontosMin > 0){
                     if(pontosFeitos == pontosMin)
                         matchPoints = false
@@ -244,15 +269,39 @@
                 else if(!--surpresa)
                     matchPoints = false
             }
-         
+            console.log(pontuacao)
+            //Gera resultados
+            let resultadosRodape = document.getElementById('resultadosRodape')
+            resultadosRodape.appendChild(document.createElement('table'))
+            resultadosRodape = document.getElementsByTagName('table')[1]
+            resultadosRodape.innerHTML = '<caption>Estatísticas</caption>'
+            cabecalho = document.createElement('tr')
+            cabecalho.setAttribute('class', 'tituloTH')
+            cabecalho.innerHTML = '<th>PONTOS </th>'
+            for(let i = 0; i < max+1; i++)
+                cabecalho.innerHTML += `<th>${i}</th>`
+            
+            cabecalho.innerHTML += `<th>TOTAL</th>`
+            resultadosRodape.appendChild(cabecalho)
+            cabecalho = document.createElement('tr')
+            let totaldeJogos = 0
+            cabecalho.innerHTML = '<th>Cartelas</th>'
+            for(let i = 0; i < max+1; i++){
+                cabecalho.innerHTML += `<td>${pontuacao[i]}</td>`
+                totaldeJogos += pontuacao[i]
+            }
+                cabecalho.innerHTML += `<td>${totaldeJogos}</td>`
+            resultadosRodape.appendChild(cabecalho)
+
+
         }
         function automatico(){
-            
+            iniciarSorteio()
             for(let i = 0; i < vetor.length; i++){
                 if(vetor[i])
-                    return !true
+                    return false
             }   
-            return !false;
+            return true;
         }
         function compara(a, b){
             return a - b;
@@ -268,7 +317,7 @@
             for(let i = 0; i < max; i++){
                 let bola
                 do{
-                    bola = Math.floor(Math.random() * possibilidades)
+                    bola = Math.floor(Math.random() * possibilidades )
 
                 }while(sorteio.indexOf(bola) != -1)
                 sorteio.push(bola)
@@ -396,6 +445,14 @@
 
             return checa
         
+        }
+
+        function corrigiSorteio(){
+            let sorteados = []
+            for(let i = 0; i < sorteio.length;i++)
+                sorteados[i] = sorteio[i] + 1;
+            
+            return sorteados
         }
     </script>
     
